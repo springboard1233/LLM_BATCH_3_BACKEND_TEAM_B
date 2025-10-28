@@ -1,0 +1,7 @@
+Hide the secret .env file
+
+.env
+
+Hide the virtual environment
+
+venv/
