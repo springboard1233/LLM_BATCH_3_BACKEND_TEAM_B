@@ -1,5 +1,14 @@
 from pymongo import MongoClient
+import os
+from dotenv import load_dotenv
 
-client = MongoClient("mongodb+srv://backend_user:aBWmEIMJPz3yLIgq@cluster0.epdt22n.mongodb.net/?appName=Cluster0")
-db = client["bfsidata"]
-collection = db["transactions"]
+load_dotenv()
+
+db_client = os.getenv("MONGO_URI")
+db_name = os.getenv("DB_NAME")
+db_collection = os.getenv("COLLECTION_NAME")
+
+
+client = MongoClient(db_client)
+db = client[db_name]
+collection = db[db_collection]
