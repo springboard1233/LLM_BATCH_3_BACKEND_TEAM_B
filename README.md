@@ -1,19 +1,61 @@
+# 🚀 Fraud Analytics API (FastAPI + MongoDB + Caching)
+
+This project is a Fraud Analytics backend service built using **FastAPI**, **MongoDB**, and **in-memory caching**.  
+It exposes APIs to analyze transaction data, detect fraud trends, show suspicious activity, and support dashboard visualization.
+
+---
+
+## 📁 Project Structure
 
 
-#  Predictive Transaction Intelligence using LLMs for BFSI
+---
 
-##  Project Overview
+## ✅ Key Features
 
-This repository contains the backend implementation for an **AI-driven system** that uses **Large Language Models (LLMs)** to analyze historical customer transaction and behavioral data. The primary goal is to **predict future transactions** and perform **real-time fraud risk assessment** for financial institutions.
+### ✅ 1. Data Overview (Mandatory)
+- Total records
+- Fraud vs. Non-fraud counts
+- Fraud distribution charts
 
-The system is designed to enhance transaction security, improve fraud detection, and optimize risk management without disrupting the customer experience.
+### ✅ 2. Key Insights
+- Average / max / min transaction amount
+- Fraud detection rate
 
-##  Outcomes
+### ✅ 3. Visual Analytics
+- Fraud trend by date/month
+- Channel/device fraud ratio
+- Correlation heatmap (optional)
 
-The successful deployment of this system is expected to deliver the following key outcomes:
+### ✅ 4. Data Filters
+Filter using:
+- Time range
+- Channel / Transaction type
+- Customer segments
 
-  * **Predictive Modeling:** Anticipate customer transactions using behavioral and historical data.
-  * **Real-Time Risk Assessment:** Instantly evaluate transaction legitimacy based on learned patterns.
-  * **Improved Fraud Detection:** Enhance the identification of anomalous or high-risk transactions.
-  * **Enhanced Financial Security:** Strengthen anti-fraud systems, reducing risk exposure.
+### ✅ 5. Alerts Section
+Shows:
+- Top suspicious transactions
+- Anomalies by amount/timing
+
+### 🎁 Bonus (Later)
+- Export CSV/Excel
+- ML model performance metrics
+- Real-time refresh indicator
+
+---
+
+## 🧰 Requirements
+
+Make sure you have:
+
+- Python **3.9+**
+- MongoDB Atlas access
+
+---
+
+## 📦 Installation
+
+```bash
+pip install -r requirements.txt
+
 
