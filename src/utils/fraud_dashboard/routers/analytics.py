@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from database import collection
+from src.utils.fraud_dashboard.database import collection
 
 router = APIRouter(prefix="/analytics")
 

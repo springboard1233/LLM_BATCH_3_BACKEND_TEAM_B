@@ -1,7 +1,7 @@
 from fastapi import APIRouter
-from database import collection
-from cache import cache
-from utils.helpers import get_db_last_update
+from src.utils.fraud_dashboard.database import collection
+from ..cache import cache
+from ..utils.helpers import get_db_last_update
 from datetime import datetime
 
 router = APIRouter(prefix="/overview")

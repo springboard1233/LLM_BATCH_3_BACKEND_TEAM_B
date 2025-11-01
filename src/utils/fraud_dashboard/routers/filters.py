@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from database import collection
+from src.utils.fraud_dashboard.database import collection
 from datetime import datetime
 
 router = APIRouter(prefix="/filter")

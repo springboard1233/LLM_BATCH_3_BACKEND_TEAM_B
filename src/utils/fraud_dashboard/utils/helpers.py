@@ -1,4 +1,4 @@
-from database import db
+from ..database import db
 
 def get_db_last_update():
     meta = db["meta"].find_one({"_id": "last_update"})
