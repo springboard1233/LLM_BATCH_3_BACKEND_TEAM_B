@@ -1,5 +1,6 @@
 from fastapi import APIRouter
-from src.utils.fraud_dashboard.database import collection
+from database import collection
+from utils import convert_objectid
 
 router = APIRouter(prefix="/alerts")
 
@@ -10,4 +11,5 @@ def suspicious_transactions():
         {"$sort": {"transaction_amount": -1}},
         {"$limit": 10}
     ]
-    return list(collection.aggregate(pipeline))
+    result = list(collection.aggregate(pipeline))
+    return convert_objectid(result)
