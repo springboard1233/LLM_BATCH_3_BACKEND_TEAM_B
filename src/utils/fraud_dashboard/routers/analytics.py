@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from src.utils.fraud_dashboard.database import collection
+from database import collection
 
 router = APIRouter(prefix="/analytics")
 
@@ -57,3 +57,12 @@ def fraud_loss():
         }
     ]
     return list(collection.aggregate(pipeline))
+@router.get("/dashboard")
+def dashboard():
+    # Add your dashboard logic here
+    # For example, you might want to return aggregated data from multiple endpoints
+    return {
+        "fraud_trend": fraud_trend(),
+        "fraud_by_channel": fraud_by_channel(),
+        "fraud_loss": fraud_loss()
+    }

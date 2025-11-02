@@ -1,3 +1,4 @@
-pandas
+uvicorn
+fastapi
 pymongo
-python-dotenv
+dotenv

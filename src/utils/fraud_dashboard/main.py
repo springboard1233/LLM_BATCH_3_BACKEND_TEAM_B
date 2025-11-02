@@ -1,8 +1,7 @@
 from fastapi import FastAPI
 from routers import overview, insights, analytics, filters, alerts
 from fastapi.middleware.cors import CORSMiddleware
-from analytics import router as analytics_router
-
+import analytics
 
 app = FastAPI()
 
@@ -27,4 +26,3 @@ app.include_router(insights.router)
 app.include_router(analytics.router)
 app.include_router(filters.router)
 app.include_router(alerts.router)
-app.include_router(analytics_router)
