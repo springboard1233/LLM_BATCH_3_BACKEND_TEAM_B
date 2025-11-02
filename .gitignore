@@ -5,3 +5,6 @@ Hide the secret .env file
 Hide the virtual environment
 
 venv/
+
+__pycache__/
+*.pyc
