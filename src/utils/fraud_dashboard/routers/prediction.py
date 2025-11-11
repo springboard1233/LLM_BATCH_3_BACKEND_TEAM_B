@@ -23,7 +23,7 @@ router = APIRouter(
 )
 
 try:
-    model = joblib.load("models/random_forest_model.pkl")
+   model = joblib.load('../../../models/random_forest_model.pkl')
 except Exception as e:
     print(f"CRITICAL ERROR: Failed to load 'models/random_forest_model.pkl'. {e}")
     model = None
