@@ -110,29 +110,33 @@ def generate_fraud_explanation(raw_input, engineered_features, is_fraud, risk_sc
     rule_reasons_text = "\n".join(f"- {r}" for r in rule_reasons) if rule_reasons else "None"
 
     prompt = f"""
-Write a short and clear fraud explanation based **only** on the provided reasons.
-You must NOT invent any new reasons or assumptions.
+You are an experienced fraud analyst. Create a detailed yet concise explanation
+based only on the facts below. Never invent additional data.
 
-Use these fields exactly:
+Summary:
 - Final Verdict: {is_fraud}
-- Risk Score: {risk_score}
-- ML Reason: "{ml_reason_text}"
+- Risk Score: {risk_score:.2f}
+- ML Reason: "{ml_reason_text if ml_reason_text else "None"}"
 - Rule Reasons:
 {rule_reasons_text}
 
-RULES:
-- If a reason exists, add only a 1–2 sentence elaboration for clarity.
-- If no reasons exist, write “No specific rules or ML indicators were triggered.”
-- Do NOT change the verdict or risk score.
-- Do NOT add new behavior patterns, history, or imaginary features.
+Response requirements:
+1. Provide a headline sentence summarizing the outcome and confidence.
+2. Add a "Key Drivers" section with bullet points describing every ML or rule
+   signal that actually triggered. Mention concrete values (amount, channel,
+   KYC status, hour, account age) when relevant. If nothing triggered, state
+   that explicitly.
+3. Add an "Assessment" paragraph (2 sentences max) explaining why the verdict
+   aligns with the risk score and how the rules/ML agree or conflict.
+4. Add a "Next Actions" section with 1–2 actionable steps (e.g., request
+   verification, monitor account). If verdict is False and no indicators fired,
+   state “No additional action required.”
+5. Keep the whole response under roughly 180 words.
 
-FORMAT:
-Final Verdict: <True/False>
-Risk Score: <value>
-
-Explanation:
-- <reason 1 + short elaboration>
-- <reason 2 + short elaboration>
+Strict rules:
+- Do not change the verdict or risk score values.
+- Do not reference internal system names or models.
+- Only use the provided reasons and transaction context.
 """
 
     try:

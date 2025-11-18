@@ -49,6 +49,7 @@ app.include_router(filters.router, prefix="/api")
 
 app.include_router(prediction.router, prefix="/api")
 
+# app.include_router(analytics_router)
 @app.get("/")
 async def root():
     return {"message": "Welcome to the Fraud Analytics API"}
