@@ -23,6 +23,7 @@ from src.utils.fraud_dashboard.database import get_collection
 from src.utils.fraud_dashboard.cache import (
     get_redis_client, get_from_cache, set_in_cache
 )
+from src.utils.fraud_dashboard.utils import convert_objectid
 
 # -------------------------------------------
 # OPTIONAL: RULE ENGINE & ALERT SERVICE
@@ -54,6 +55,12 @@ try:
 except Exception as e:
     print(f"CRITICAL ERROR loading model. {e}")
     model = None
+
+try:
+    predictions_collection = get_collection("predictions")
+except Exception as e:
+    print(f"CRITICAL ERROR in prediction.py: Could not get 'predictions' collection. {e}")
+    predictions_collection = None
 
 
 model_metrics = {
@@ -230,6 +237,8 @@ def apply_business_rules(transaction: RawTransactionInput, engineered_features: 
 def predict_and_save(transaction: RawTransactionInput):
     if model is None:
         raise HTTPException(status_code=503, detail="Model is not loaded.")
+    if predictions_collection is None:
+        raise HTTPException(status_code=503, detail="Database is not available.")
 
     # 1. Feature engineering
     engineered_features = transform_features(transaction)
@@ -350,8 +359,7 @@ def predict_and_save(transaction: RawTransactionInput):
     record["processed_at"] = datetime.now()
     record["explanation"] = explanation
 
-    predictions = get_collection("predictions")
-    predictions.insert_one(record)
+    predictions_collection.insert_one(record)
 
     # 11. Save fraud alert via alert_service when high risk
     try:
@@ -370,3 +378,46 @@ def predict_and_save(transaction: RawTransactionInput):
         print(f"ERROR: failed to save alert via alert_service: {e}")
 
     return result
+
+
+@router.get("/history")
+def get_prediction_history(page: int = 1, limit: int = 25):
+    if predictions_collection is None:
+        raise HTTPException(status_code=503, detail="Database is not available.")
+
+    page = max(page, 1)
+    limit = max(1, min(limit, 200))
+    skip = (page - 1) * limit
+
+    total = predictions_collection.count_documents({})
+    cursor = (
+        predictions_collection.find()
+        .sort("processed_at", -1)
+        .skip(skip)
+        .limit(limit)
+    )
+
+    records = []
+    for doc in cursor:
+        doc = convert_objectid(doc)
+        raw_id = doc.pop("_id", None)
+        if raw_id and "id" not in doc:
+            doc["id"] = raw_id
+
+        processed_at = doc.get("processed_at")
+        if hasattr(processed_at, "isoformat"):
+            doc["processed_at"] = processed_at.isoformat()
+
+        timestamp = doc.get("timestamp")
+        if hasattr(timestamp, "isoformat"):
+            doc["timestamp"] = timestamp.isoformat()
+
+        records.append(doc)
+
+    return {
+        "data": records,
+        "page": page,
+        "limit": limit,
+        "total": total,
+        "has_next": skip + len(records) < total,
+    }
