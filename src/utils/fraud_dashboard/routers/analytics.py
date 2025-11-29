@@ -2,6 +2,10 @@ import sys
 import os
 from fastapi import APIRouter
 
+from datetime import datetime, timedelta
+
+from src.utils.fraud_dashboard.utilities.helpers import get_model_feature_importance
+
 # --- NEW PATH FIX ---
 # This code manually adds your project's root folder to the Python path
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -244,6 +248,81 @@ def dashboard():
 
 
 
+
+# --- Feature Importance ---
+@router.get("/feature_importance")
+def feature_importance():
+    """
+    Returns the importance score of each feature used by the model.
+    Useful for a bar chart showing what drives fraud predictions.
+    """
+    try:
+       
+        importance_data = get_model_feature_importance(project_root)
+        if not importance_data:
+             return {"error": "Could not retrieve feature importance. Model may not be found."}
+        return importance_data
+    except Exception as e:
+        print(f"Error in /feature_importance endpoint: {e}")
+        return {"error": "An unexpected error occurred."}
+
+
+# ---  Risk Trend Analysis ---
+@router.get("/risk_trend")
+def risk_trend_analysis(days: int = 7):
+    """
+    Returns a daily count of high-risk transactions for the last 'days'.
+    Useful for a line chart showing fraud trends over time.
+    """
+    try:
+        if collection is None:
+             return {"error": "Database connection failed."}
+
+        start_date = datetime.utcnow() - timedelta(days=days)
+        
+        HIGH_RISK_THRESHOLD = 0.75
+
+        pipeline = [
+            # 1. Filter for recent transactions that are high-risk
+            {
+                "$match": {
+                    "timestamp": {"$gte": start_date.strftime("%Y-%m-%d %H:%M:%S")},
+                    "risk_score": {"$gt": HIGH_RISK_THRESHOLD}
+                }
+            },
+            # 2. Project the date part of the timestamp
+            {
+                "$project": {
+                    "date": {"$substr": ["$timestamp", 0, 10]} # Extracts YYYY-MM-DD
+                }
+            },
+            # 3. Group by date and count the transactions
+            {
+                "$group": {
+                    "_id": "$date",
+                    "high_risk_count": {"$sum": 1}
+                }
+            },
+            # 4. Sort by date ascending
+            {
+                "$sort": {"_id": 1}
+            },
+            # 5. Format the final output
+            {
+                "$project": {
+                    "_id": 0,
+                    "date": "$_id",
+                    "count": "$high_risk_count"
+                }
+            }
+        ]
+
+        trend_data = list(collection.aggregate(pipeline))
+        return trend_data
+
+    except Exception as e:
+        print(f"Error in /risk_trend endpoint: {e}")
+        return {"error": "An unexpected error occurred."}
 
 
 
