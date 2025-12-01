@@ -15,6 +15,7 @@ from src.utils.fraud_dashboard.cache import get_redis_client
 from src.utils.fraud_dashboard.routers import analytics, overview, alerts, insights, filters
 from src.utils.fraud_dashboard.routers import prediction
 from src.utils.fraud_dashboard.routers import feedback
+from src.utils.fraud_dashboard.routers import auth
 
 
 app = FastAPI()
@@ -50,6 +51,8 @@ app.include_router(filters.router, prefix="/api")
 app.include_router(feedback.router, prefix="/api")
 
 app.include_router(prediction.router, prefix="/api")
+app.include_router(auth.router, prefix="/api")
+
 
 # app.include_router(analytics_router)
 @app.get("/")
