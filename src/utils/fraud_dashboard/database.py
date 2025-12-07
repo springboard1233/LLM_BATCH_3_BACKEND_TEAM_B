@@ -14,11 +14,22 @@ project_root = os.path.abspath(os.path.join(current_dir, "..", "..", ".."))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 dotenv_path = os.path.join(project_root, ".env")
+
+print(f"=== DATABASE.PY DEBUG ===")
+print(f"Current dir: {current_dir}")
+print(f"Project root: {project_root}")
+print(f"Looking for .env at: {dotenv_path}")
+print(f".env file exists: {os.path.exists(dotenv_path)}")
+
 load_dotenv(dotenv_path=dotenv_path)
 # --- END OF NEW PATH FIX ---
 
 mongo_uri = os.getenv("MONGO_URI")
 db_name = os.getenv("MONGO_DB_NAME")
+
+print(f"MONGO_URI loaded: {'Yes' if mongo_uri else 'No'}")
+print(f"MONGO_DB_NAME: {db_name}")
+print(f"=== END DEBUG ===")
 
 if not mongo_uri or not db_name:
     print("CRITICAL ERROR: MONGO_URI or MONGO_DB_NAME not found in .env file")
@@ -26,8 +37,11 @@ if not mongo_uri or not db_name:
 
 try:
     client = MongoClient(mongo_uri)
-    db = client[db_name]  # This will no longer fail
-    print("MongoDB client initialized successfully.")
+    # Test the connection
+    client.server_info()  # Will raise exception if cannot connect
+    db = client[db_name]
+    print(f"✓ MongoDB client initialized successfully.")
+    print(f"✓ Connected to database: {db_name}")
 except Exception as e:
     print(f"CRITICAL ERROR connecting to MongoDB: {e}")
     client = None
