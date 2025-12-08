@@ -8,42 +8,56 @@ from pymongo.database import Database
 from pymongo.collection import Collection
 from dotenv import load_dotenv
 
-# --- NEW PATH FIX ---
+# --- PATH FIX for imports ---
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_dir, "..", "..", ".."))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
-dotenv_path = os.path.join(project_root, ".env")
+# --- END OF PATH FIX ---
 
-print(f"=== DATABASE.PY DEBUG ===")
-print(f"Current dir: {current_dir}")
-print(f"Project root: {project_root}")
-print(f"Looking for .env at: {dotenv_path}")
-print(f".env file exists: {os.path.exists(dotenv_path)}")
+# Load .env file if it exists (optional - environment variables from Docker will take precedence)
+# Try multiple locations for .env file
+dotenv_paths = [
+    os.path.join(project_root, ".env"),
+    os.path.join(os.getcwd(), ".env"),
+    ".env"
+]
+for dotenv_path in dotenv_paths:
+    if os.path.exists(dotenv_path):
+        load_dotenv(dotenv_path=dotenv_path)
+        break
+else:
+    # In Docker, environment variables are set directly, so .env is optional
+    load_dotenv()  # This will still check for .env in current directory, but won't fail if missing
 
-load_dotenv(dotenv_path=dotenv_path)
-# --- END OF NEW PATH FIX ---
-
+# Get environment variables (Docker environment variables take precedence)
 mongo_uri = os.getenv("MONGO_URI")
 db_name = os.getenv("MONGO_DB_NAME")
 
-print(f"MONGO_URI loaded: {'Yes' if mongo_uri else 'No'}")
-print(f"MONGO_DB_NAME: {db_name}")
-print(f"=== END DEBUG ===")
-
 if not mongo_uri or not db_name:
-    print("CRITICAL ERROR: MONGO_URI or MONGO_DB_NAME not found in .env file")
+    print("CRITICAL ERROR: MONGO_URI or MONGO_DB_NAME environment variables not set")
+    print(f"MONGO_URI: {'Set' if mongo_uri else 'NOT SET'}")
+    print(f"MONGO_DB_NAME: {'Set' if db_name else 'NOT SET'}")
+    print("Please set these environment variables or create a .env file")
     sys.exit(1) # Exit if env variables are not set
 
+# Initialize MongoDB connection
+client = None
+db = None
+
 try:
-    client = MongoClient(mongo_uri)
+    print(f"Attempting to connect to MongoDB: {mongo_uri.split('@')[1] if '@' in mongo_uri else mongo_uri}")
+    client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
     # Test the connection
     client.server_info()  # Will raise exception if cannot connect
     db = client[db_name]
     print(f"✓ MongoDB client initialized successfully.")
     print(f"✓ Connected to database: {db_name}")
+    print(f"✓ Available collections: {db.list_collection_names()}")
 except Exception as e:
     print(f"CRITICAL ERROR connecting to MongoDB: {e}")
+    print(f"MONGO_URI used: {mongo_uri}")
+    print(f"MONGO_DB_NAME used: {db_name}")
     client = None
     db = None
 

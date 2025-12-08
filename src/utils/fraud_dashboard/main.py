@@ -21,12 +21,30 @@ from src.utils.fraud_dashboard.routers import auth
 app = FastAPI()
 
 
-origins = [
+# Default CORS origins
+default_origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "http://frontend:80",
+    "http://fraud-dashboard-frontend:80",
+    "http://localhost:80",
+    "https://fraud-frontend-5ag2.onrender.com"
+    
 ]
+
+# Allow custom CORS origins from environment variable
+cors_origins_env = os.getenv("CORS_ORIGINS", "")
+if cors_origins_env:
+    if cors_origins_env == "*":
+        origins = ["*"]
+    else:
+        # Split by comma and add to default origins
+        custom_origins = [origin.strip() for origin in cors_origins_env.split(",")]
+        origins = default_origins + custom_origins
+else:
+    origins = default_origins
 
 app.add_middleware(
     CORSMiddleware,

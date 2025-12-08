@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  # MongoDB Service
+  mongodb:
+    image: mongo:7.0
+    container_name: fraud_mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: backend_user
+      MONGO_INITDB_ROOT_PASSWORD: aBWmEIMJPz3yLIgq
+      MONGO_INITDB_DATABASE: bfsidata
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fraud_network
+
+  # Redis Service
+  redis:
+    image: redis:7-alpine
+    container_name: fraud_redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fraud_network
+
+  # FastAPI Backend Service
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fraud_backend
+    ports:
+      - "8000:8000"
+    environment:
+      MONGO_URI: "mongodb://backend_user:aBWmEIMJPz3yLIgq@mongodb:27017/bfsidata?authSource=admin"
+      MONGO_DB_NAME: bfsidata
+      PREDICTION_COLLECTION: predictions
+      TRANSACTION_COLLECTION: transactions
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ""
+      REDIS_DB: 0
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-AIzaSyDYBkMOcweet4lO54XfcM6GRPKDEUtq5Fk}
+      MODEL_PATH: ./models/random_forest_model.pkl
+      CORS_ORIGINS: "http://localhost:3000,http://frontend:80,http://fraud-dashboard-frontend:80"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+      - ./models:/app/models
+      - ./data:/app/data
+    networks:
+      - fraud_network
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:
+    driver: local
+  mongodb_config:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  fraud_network:
+    driver: bridge

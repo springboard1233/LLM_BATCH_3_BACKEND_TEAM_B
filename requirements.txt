@@ -2,6 +2,7 @@ annotated-doc==0.0.3
 annotated-types==0.7.0
 anyio==4.11.0
 asttokens==3.0.0
+bcrypt==4.0.1
 cachetools==6.2.2
 certifi==2025.10.5
 charset-normalizer==3.4.4

@@ -3,10 +3,13 @@ from pymongo import MongoClient
 import os
 import sys
 from dotenv import load_dotenv
+
+# Load .env file if it exists
 load_dotenv()
 
-MONGO_CONNECTION_STRING = os.getenv("MONGO_CONNECTION_STRING")
-DATABASE_NAME = "bfsidata"
+# Support both MONGO_URI (Docker) and MONGO_CONNECTION_STRING (local)
+MONGO_CONNECTION_STRING = os.getenv("MONGO_URI") or os.getenv("MONGO_CONNECTION_STRING") or None
+DATABASE_NAME = os.getenv("MONGO_DB_NAME") or "bfsidata"
 COLLECTION_NAME = "transactions"
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -17,7 +20,12 @@ PROCESSED_FILE_PATH = os.path.join(PROJECT_ROOT, "data", "processed", "transacti
 def connect_to_mongo():
     """Establishes connection to MongoDB and returns the collection object."""
     try:
-        print(f"Connecting to MongoDB Atlas cluster...")
+        if not MONGO_CONNECTION_STRING:
+            print("ERROR: MONGO_URI or MONGO_CONNECTION_STRING environment variable not set")
+            sys.exit(1)
+        
+        print(f"Connecting to MongoDB...")
+        print(f"URI: {MONGO_CONNECTION_STRING.split('@')[1] if '@' in MONGO_CONNECTION_STRING else MONGO_CONNECTION_STRING}")
         
         client = MongoClient(MONGO_CONNECTION_STRING, serverSelectionTimeoutMS=30000)
         
@@ -26,6 +34,7 @@ def connect_to_mongo():
         
         db = client[DATABASE_NAME]
         collection = db[COLLECTION_NAME]
+        print(f"Using database: {DATABASE_NAME}, collection: {COLLECTION_NAME}")
         return collection, client
     except Exception as e:
         print(f"ERROR: Could not connect to MongoDB. Check connection string, password, and Network Access IPs.")
@@ -76,12 +85,18 @@ def insert_data_to_collection(collection, df):
 
 def main():
     
-    if "<password>" in MONGO_CONNECTION_STRING:
+    if not MONGO_CONNECTION_STRING:
         print("="*50)
         print("ERROR: SCRIPT NOT RUN")
-        print("Please edit 'src/utils/load_to_mongo.py' and replace")
-        print("'<password>' and your cluster host in the")
-        print("MONGO_CONNECTION_STRING variable.")
+        print("Please set MONGO_URI or MONGO_CONNECTION_STRING environment variable")
+        print("In Docker: Use MONGO_URI from docker-compose.yml")
+        print("="*50)
+        return
+    
+    if isinstance(MONGO_CONNECTION_STRING, str) and "<password>" in MONGO_CONNECTION_STRING:
+        print("="*50)
+        print("ERROR: SCRIPT NOT RUN")
+        print("Please replace '<password>' in MONGO_CONNECTION_STRING with actual password")
         print("="*50)
         return
 

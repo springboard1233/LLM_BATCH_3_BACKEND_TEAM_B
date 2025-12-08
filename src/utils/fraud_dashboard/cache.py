@@ -12,12 +12,19 @@ project_root = os.path.abspath(os.path.join(current_dir, "..", "..", ".."))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 dotenv_path = os.path.join(project_root, ".env")
-load_dotenv(dotenv_path=dotenv_path)
+
+# Load .env file if it exists (optional - environment variables from Docker will take precedence)
+if os.path.exists(dotenv_path):
+    load_dotenv(dotenv_path=dotenv_path)
+else:
+    # In Docker, environment variables are set directly, so .env is optional
+    load_dotenv()  # This will still check for .env in current directory, but won't fail if missing
 # --- END OF NEW PATH FIX ---
 
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
 REDIS_DB = int(os.getenv("REDIS_DB", 0))
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", None)
 
 redis_client = None
 
@@ -25,12 +32,15 @@ def get_redis_client():
     global redis_client
     if redis_client is None:
         try:
-            redis_client = redis.Redis(
-                host=REDIS_HOST,
-                port=REDIS_PORT,
-                db=REDIS_DB,
-                decode_responses=True
-            )
+            redis_kwargs = {
+                "host": REDIS_HOST,
+                "port": REDIS_PORT,
+                "db": REDIS_DB,
+                "decode_responses": True
+            }
+            if REDIS_PASSWORD:
+                redis_kwargs["password"] = REDIS_PASSWORD
+            redis_client = redis.Redis(**redis_kwargs)
             redis_client.ping()
             print("Successfully connected to Redis.")
         except Exception as e:
