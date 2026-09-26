@@ -121,7 +121,7 @@ def transform_features(raw_input: RawTransactionInput) -> Dict:
 import google.generativeai as genai
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
-gemini_model = genai.GenerativeModel("models/gemini-2.5-flash")
+gemini_model = genai.GenerativeModel("models/gemini-3.1-flash-lite")
 
 
 def generate_fraud_explanation(raw_input, engineered_features, is_fraud, risk_score):
